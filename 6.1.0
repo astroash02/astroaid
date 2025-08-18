@@ -1,0 +1,31 @@
+Channels:
+ - defaults
+ - conda-forge
+Platform: win-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: C:\anaconda3\envs\astroaid
+
+  added / updated specs:
+    - astropy
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    astropy-7.1.0              |  py311hf9130e5_0        13.2 MB
+    certifi-2025.8.3           |  py311haa95532_0         161 KB
+    ------------------------------------------------------------
+                                           Total:        13.4 MB
+
+The following packages will be SUPERSEDED by a higher-priority channel:
+
+  astropy            conda-forge/noarch::astropy-7.1.0-pyh~ --> pkgs/main/win-64::astropy-7.1.0-py311hf9130e5_0 
+  certifi            conda-forge/noarch::certifi-2025.8.3-~ --> pkgs/main/win-64::certifi-2025.8.3-py311haa95532_0 
+
+
+Proceed ([y]/n)? Terminate batch job (Y/N)? 

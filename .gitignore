@@ -1,0 +1,20 @@
+# Ignore Visual Studio temporary files
+.vs/
+
+# Python bytecode files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Other files to ignore
+*.log
+*.bak
