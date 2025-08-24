@@ -12,7 +12,7 @@ def check_conda_env():
     """Check if we're in the correct conda environment"""
     conda_env = os.environ.get('CONDA_DEFAULT_ENV', 'base')
     if conda_env != 'astroaid':
-        print(f"⚠️  Warning: Not in 'astroaid' conda environment (current: {conda_env})")
+        print(f"⚠️ Warning: Not in 'astroaid' conda environment (current: {conda_env})")
         print("Please run: conda activate astroaid")
         return False
     return True
@@ -32,7 +32,6 @@ def check_dependencies():
         print(f"❌ Missing packages: {', '.join(missing_packages)}")
         print("Install them with: conda install -c conda-forge " + ' '.join(missing_packages))
         return False
-    
     return True
 
 def main():
@@ -43,7 +42,7 @@ def main():
     if not check_conda_env():
         sys.exit(1)
     
-    # Check dependencies
+    # Check dependencies  
     if not check_dependencies():
         sys.exit(1)
     
@@ -51,9 +50,9 @@ def main():
     print(f"🐍 Python: {sys.version}")
     print(f"📂 Working directory: {os.getcwd()}")
     
-    # Import and run the app
+    # Import and run the app - FIXED
     try:
-        from app import app, server
+        from app import app
         print("📊 Starting Dash server...")
         app.run_server(debug=True, host='127.0.0.1', port=8050)
     except ImportError as e:

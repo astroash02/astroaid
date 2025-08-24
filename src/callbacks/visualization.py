@@ -1,4 +1,8 @@
-﻿import pandas as pd
+﻿"""
+Visualization callbacks - FIXED VERSION
+"""
+
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import callback, Input, Output, State, dash_table, html, ctx, no_update
@@ -8,7 +12,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def register_callbacks(app):
-    # CSV PLOTTING CALLBACKS (for Charts & Plots tab)
+    """Register all visualization callbacks"""
+    
     @callback(
         [Output("x-data-selector", "options"),
          Output("y-data-selector", "options"),
@@ -39,11 +44,11 @@ def register_callbacks(app):
         all_columns = [{"label": col, "value": col} for col in df.columns]
         numeric_columns = [{"label": col, "value": col} for col in df.select_dtypes(include=[np.number]).columns]
 
-        # SMART DEFAULTS:
+        # Smart defaults
         display_columns = [col for col in df.columns if col != '_source_file']
         default_columns = display_columns[:8] if len(display_columns) > 8 else display_columns
 
-        # Row limit: smart default based on data size
+        # Row limit based on data size
         total_rows = len(df)
         if total_rows <= 50:
             default_row_limit = total_rows
@@ -71,11 +76,7 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
     def update_chart(n_clicks, chart_type, x_col, y_col, color_col, size_col, data):
-        """Create chart when Create Chart button is clicked - DEBUGGED VERSION"""
-        print(f"🔍 DEBUG: Chart button callback triggered! n_clicks={n_clicks}")
-        print(f"🔍 DEBUG: chart_type={chart_type}, x_col={x_col}, y_col={y_col}")
-        print(f"🔍 DEBUG: data available={data is not None}")
-        
+        """Create chart when button is clicked"""
         if not n_clicks or n_clicks == 0:
             empty_fig = go.Figure()
             empty_fig.add_annotation(
@@ -84,7 +85,6 @@ def register_callbacks(app):
                 font=dict(size=16, color="gray")
             )
             empty_fig.update_layout(height=500, showlegend=False)
-            print("🔍 DEBUG: Returning empty figure (no clicks)")
             return empty_fig
 
         if not data:
@@ -95,20 +95,17 @@ def register_callbacks(app):
                 font=dict(size=16, color="red")
             )
             error_fig.update_layout(height=500, showlegend=False)
-            print("🔍 DEBUG: Returning error figure (no data)")
             return error_fig
 
         try:
-            # Handle both dict and list formats
+            # Handle different data formats
             if isinstance(data, dict) and 'data' in data:
                 df = pd.DataFrame(data['data'])
             elif isinstance(data, list):
                 df = pd.DataFrame(data)
             else:
                 df = pd.DataFrame(data)
-            
-            print(f"🔍 DEBUG: DataFrame created with shape {df.shape}")
-            
+
             if df.empty:
                 raise ValueError("Dataset is empty")
 
@@ -121,32 +118,26 @@ def register_callbacks(app):
             if chart_type in ['scatter', 'line', 'bar'] and not y_col:
                 raise ValueError(f"Please select a column for Y-axis for {chart_type} chart")
 
-            # Create the plot based on chart type
-            print(f"🔍 DEBUG: Creating {chart_type} chart")
-            
+            # Create the plot
             if chart_type == 'scatter' and x_col and y_col:
                 fig = px.scatter(
                     df, x=x_col, y=y_col,
                     color=color_col if color_col and color_col in df.columns else None,
                     size=size_col if size_col and size_col in df.columns else None,
-                    title=f'Scatter Plot: {y_col} vs {x_col}',
-                    hover_data=[col for col in df.columns if col in [x_col, y_col, color_col, size_col] and col is not None]
+                    title=f'Scatter Plot: {y_col} vs {x_col}'
                 )
-
             elif chart_type == 'line' and x_col and y_col:
                 fig = px.line(
                     df, x=x_col, y=y_col,
                     color=color_col if color_col and color_col in df.columns else None,
                     title=f'Line Plot: {y_col} vs {x_col}'
                 )
-
             elif chart_type == 'bar' and x_col and y_col:
                 fig = px.bar(
                     df, x=x_col, y=y_col,
                     color=color_col if color_col and color_col in df.columns else None,
                     title=f'Bar Chart: {y_col} vs {x_col}'
                 )
-
             elif chart_type == 'histogram' and x_col:
                 fig = px.histogram(
                     df, x=x_col,
@@ -154,14 +145,12 @@ def register_callbacks(app):
                     title=f'Histogram of {x_col}',
                     nbins=30
                 )
-
             elif chart_type == 'box' and y_col:
                 fig = px.box(
                     df, y=y_col,
                     color=color_col if color_col and color_col in df.columns else None,
                     title=f'Box Plot of {y_col}'
                 )
-
             else:
                 fig = go.Figure()
                 fig.add_annotation(
@@ -170,7 +159,7 @@ def register_callbacks(app):
                     font=dict(size=14, color="orange")
                 )
 
-            # Apply consistent styling
+            # Apply styling
             fig.update_layout(
                 height=500,
                 template='plotly_white',
@@ -186,12 +175,10 @@ def register_callbacks(app):
             fig.update_xaxes(showgrid=True, gridcolor='lightgray', title_font_size=14)
             fig.update_yaxes(showgrid=True, gridcolor='lightgray', title_font_size=14)
 
-            print(f"🔍 DEBUG: Successfully created {chart_type} chart!")
-            logger.info(f"Successfully created {chart_type} chart")
+            logger.info(f"Successfully created {chart_type} chart!")
             return fig
 
         except Exception as e:
-            print(f"🔍 DEBUG: Error creating chart: {e}")
             logger.error(f"Error creating chart: {e}")
             error_fig = go.Figure()
             error_fig.add_annotation(
@@ -202,7 +189,6 @@ def register_callbacks(app):
             error_fig.update_layout(height=500, showlegend=False)
             return error_fig
 
-    # CSV TABLE DISPLAY CALLBACKS
     @callback(
         Output("main-data-table", "children"),
         [Input("quick-column-selector", "value"),
@@ -211,7 +197,7 @@ def register_callbacks(app):
         [State("processed-data", "data")]
     )
     def update_combined_table(selected_columns, row_limit, refresh_clicks, stored_data):
-        """Update the main data table display for CSV data"""
+        """Update the main data table display"""
         if not stored_data:
             return html.Div([
                 html.Div([
@@ -280,53 +266,48 @@ def register_callbacks(app):
 
         return html.Div([html.Div(status_badges, className="mb-3"), file_breakdown, table])
 
-    # TAB SWITCHING (works for both CSV and FITS) - FIXED VERSION
+    # TAB SWITCHING - FIXED
     @callback(
-        [Output("table-tab-btn", "color"),
-         Output("plots-tab-btn", "color"),
-         Output("options-tab-btn", "color"),
-         Output("table-panel", "style"),
-         Output("plots-panel", "style"),
-         Output("options-panel", "style")],
-        [Input("table-tab-btn", "n_clicks"),
-         Input("plots-tab-btn", "n_clicks"),
-         Input("options-tab-btn", "n_clicks")],
-        prevent_initial_call=True
-    )
+    [Output("table-tab-btn", "color"),
+     Output("plots-tab-btn", "color"),
+     Output("options-tab-btn", "color"),
+     Output("table-panel", "style"),
+     Output("plots-panel", "style"),
+     Output("options-panel", "style")],
+    [Input("table-tab-btn", "n_clicks"),
+     Input("plots-tab-btn", "n_clicks"),
+     Input("options-tab-btn", "n_clicks")],
+    prevent_initial_call=True
+)
     def switch_tabs(table_clicks, plots_clicks, options_clicks):
-        """Switch between table, plots, and options tabs - FIXED VERSION"""
-        if not ctx.triggered:
-            return ("primary", "outline-primary", "outline-secondary",
-                    {"display": "block"}, {"display": "none"}, {"display": "none"})
-
-        # FIXED: Get just the component ID part
-        prop_id = ctx.triggered[0]['prop_id']
-        button_id = prop_id.split('.')[0]  # This should extract just 'plots-tab-btn'
+        """Switch between CSV tabs only - doesn't affect FITS/images"""
     
-        print(f"🔍 DEBUG: Full prop_id: {prop_id}")
-        print(f"🔍 DEBUG: Extracted button_id: {button_id}")
-        print(f"🔍 DEBUG: button_id type: {type(button_id)}")
+        # Initialize with Table tab active (default)
+        colors = ["primary", "outline-primary", "outline-secondary"]
+        styles = [{"display": "block"}, {"display": "none"}, {"display": "none"}]
+    
+        if ctx.triggered:
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+            if button_id == "plots-tab-btn":
+                # Charts & Plots tab active
+                colors = ["outline-primary", "primary", "outline-secondary"]
+                styles = [{"display": "none"}, {"display": "block"}, {"display": "none"}]
+            elif button_id == "options-tab-btn":
+                # Data Options tab active
+                colors = ["outline-primary", "outline-secondary", "primary"]
+                styles = [{"display": "none"}, {"display": "none"}, {"display": "block"}]
+            # else: Table tab remains active (default colors/styles)
+    
+        return colors + styles
 
-        if button_id == "plots-tab-btn":
-            print("🔍 DEBUG: Switching to plots panel")
-            return ("outline-primary", "primary", "outline-secondary",
-                    {"display": "none"}, {"display": "block"}, {"display": "none"})
-        elif button_id == "options-tab-btn":
-            print("🔍 DEBUG: Switching to options panel")
-            return ("outline-primary", "outline-secondary", "primary",
-                {"display": "none"}, {"display": "none"}, {"display": "block"})
-        else:
-            print("🔍 DEBUG: Switching to table panel")
-            return ("primary", "outline-primary", "outline-secondary",
-                {"display": "block"}, {"display": "none"}, {"display": "none"})
 
-    # DATA SUMMARY
     @callback(
         Output("data-summary", "children"),
         Input("processed-data", "data")
     )
     def update_data_summary(processed_data):
-        """Update data summary in options panel"""
+        """Update data summary"""
         if not processed_data or not processed_data.get('data'):
             return "No CSV data available for summary"
 
@@ -335,7 +316,7 @@ def register_callbacks(app):
                 df = pd.DataFrame(processed_data['data'])
             else:
                 df = pd.DataFrame(processed_data)
-            
+
             numeric_cols = df.select_dtypes(include=[np.number]).columns
             text_cols = df.select_dtypes(include=['object']).columns
 
@@ -346,17 +327,12 @@ def register_callbacks(app):
                 html.P([html.Strong("Memory Usage: "), f"{df.memory_usage(deep=True).sum() / 1024**2:.1f} MB"]),
                 html.P([html.Strong("Missing Values: "), f"{df.isnull().sum().sum():,}"]),
                 html.P([html.Strong("Duplicate Rows: "), f"{df.duplicated().sum():,}"]),
-                html.Hr(),
-                html.H6("Column Data Types:", className="mb-2"),
-                html.Div([
-                    html.P(f"{col}: {dtype}", className="small mb-1")
-                    for col, dtype in df.dtypes.items()
-                ])
             ])
+
         except Exception as e:
             return f"Error generating summary: {str(e)}"
 
-    # AUTO-POPULATE DROPDOWNS - FIXED VERSION
+    # Default axis selections - FIXED
     @callback(
         [Output("x-data-selector", "value"),
          Output("y-data-selector", "value")],
@@ -365,11 +341,10 @@ def register_callbacks(app):
         prevent_initial_call=True
     )
     def set_default_axis_selections(x_options, y_options):
-        """Set smart defaults for X and Y axis selections"""
+        """Set smart defaults for axis selections"""
         if x_options and y_options:
             x_default = x_options[0]['value'] if len(x_options) > 0 else None
-            # FIXED: Changed from x_options to x_options[20] and proper fallback
-            y_default = x_options[20]['value'] if len(x_options) > 1 else x_options['value'] if len(x_options) > 0 else None
+            y_default = x_options[1]['value'] if len(x_options) > 1 else x_options['value'] if len(x_options) > 0 else None
             return x_default, y_default
         return None, None
 
